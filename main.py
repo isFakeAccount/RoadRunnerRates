@@ -1,8 +1,9 @@
+import random
+import time
+import traceback
+
 import praw
 from prawcore.exceptions import PrawcoreException
-import traceback
-import time
-import random
 
 
 def main():
@@ -19,11 +20,12 @@ def main():
                 comment = submission.reply(f"BEEP BEEP! [I give it a {random.randint(0, 100)} out of 100.]")
                 # Pins, distinguishes, and locks the comment
                 comment.mod.distinguish(how="yes", sticky=True)
+
             for comment in comment_stream:
                 if comment is None:
                     break
                 if 'u/roadrunner_rates' not in comment.body.lower():
-                    break
+                    continue
 
                 # Iterate over users and delete the record of users which mentioned bot more than 30 minutes ago
                 for key, value in list(users.items()):
@@ -33,12 +35,31 @@ def main():
                     if age > 1800:
                         del users[key]
 
+                try:
+                    # If author is in the users dictionary then it means his time hasn't expired
+                    last_mention_time = users[comment.author.name]
+                    now = time.time()
+                    cool_down_timer = (last_mention_time + 1800) - now
+                    cool_down_timer = cool_down_timer // 60
+                    try:
+                        comment.author.message("Your cool down timer hasn't expired!",
+                                               f"Your cool down timer hasn't expired. You can use bot command after "
+                                               f"{cool_down_timer} minutes")
+                    except Exception:
+                        # if a user has disabled PM from strangers
+                        pass
+                    continue
+                except KeyError:
+                    # If user doesn't exist in the dictionary
+                    pass
+
                 if 'thank' in comment.body.lower():
                     response = comment.reply(f"BEEP BEEP! [You're welcome, u/{comment.author.name}!]")
                 else:
                     response = comment.reply(f"BEEP BEEP! [I give it a {random.randint(0, 100)} out of 100.]")
                 response.mod.distinguish(how="yes")
                 users[comment.author.name] = time.time()
+
         except (PrawcoreException, AttributeError):
             # prints traceback
             traceback.print_exc()
