@@ -1,3 +1,4 @@
+import os
 import random
 import time
 import traceback
@@ -72,7 +73,11 @@ def main():
 
 
 if __name__ == '__main__':
-    reddit = praw.Reddit('roadrunner_rates', user_agent='RoadRunnerRate by u/is_Fake_Account')
+    reddit = praw.Reddit(client_id=os.environ['client_id'],
+                         client_secret=os.environ['client_secret'],
+                         username=os.environ['username'],
+                         password=os.environ['password'],
+                         user_agent='RoadRunnerRate by u/is_Fake_Account')
     subreddit = reddit.subreddit('meepmeeproadrunner')
     print("roadrunner_rates is now live!")
     main()
